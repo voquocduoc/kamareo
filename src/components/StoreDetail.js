@@ -6,6 +6,7 @@ import StoreHOC from "./StoreHOC";
 import { selectStoreIdToView } from "../actionCreators";
 import Dialog from 'material-ui/Dialog';
 import {uploadImage} from "../firebase/storage";
+import {updateData } from "../firebase/db";
 
 // form - meterial-ui
 import { Field, reduxForm } from 'redux-form'
@@ -17,9 +18,10 @@ const validate = values => {
     if (!values[ field ]) {
       errors[ field ] = 'Required'
     }
-  })
-  if (values.phone && !/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/i.test(values.phone)) {
-    errors.email = 'Invalid Phone Number'
+  });
+
+  if (values.phone && !/^\D?(\d{3})\D?\D?(\d{3})\D?(\d{4})$/i.test(values.phone)) {
+    errors.phone = 'Invalid Phone Number, ex: (111) 222-3333 | 1112223333 | 111-222-3333'
   }
   return errors
 }
@@ -29,14 +31,10 @@ const renderTextField = ({ input, label, defaultValue, type, meta: { touched, er
     <label>{label}</label>
     <div>
       <input {...input} value={defaultValue} placeholder={label} type={type} />
-      {touched && error && <span className="error">{error}</span>}      
+      {touched && error && <span className="error">{error}</span>}   
     </div>
   </div>
 )
-
-const submitform = (props) => {
-  console.log(props)
-}
 
 class StoreDetail extends Component {
     constructor(props) {
@@ -99,6 +97,29 @@ class StoreDetail extends Component {
         });
       };
       
+    }
+
+    submitform = () => {
+      let dataUpdate = {
+        store: {
+          address: this.state.storeAddress,
+          logoUrl: this.state.image,
+          name: this.state.storeName,
+          phone: this.state.storePhone
+        },
+        redInvoice: {
+          address: this.state.redInvoiceAddress,
+          name: this.state.redInvoiceName,
+          taxCode: this.state.redInvoicetax
+        }
+      };
+    
+      console.log(dataUpdate);
+    
+      updateData(this.state.storeId, dataUpdate).then((result) => {
+        alert("Done !");
+        window.location.reload();
+      });
     }
 
     render() {
@@ -301,7 +322,7 @@ class StoreDetail extends Component {
                                     <Button color="secondary" onClick={this.toggle}>Cancel</Button>{' '}
                                   </Col>
                                   <Col md={4}>
-                                    <Button color="primary" onClick={handleSubmit(submitform)}>Submit</Button>
+                                    <Button color="primary" onClick={handleSubmit(this.submitform)}>Submit</Button>
                                   </Col>
                                 </Row>
                               </form>

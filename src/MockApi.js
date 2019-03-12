@@ -1,23 +1,27 @@
-import find from 'lodash/find';
-import axios from 'axios';
 import storesMockData from './data/stores';
 export const stores = storesMockData;
+import {getStore, getRedInvoice} from "./firebase/db";
 
 export default {
     getStore(id) {
         return new Promise((resolve) => {
             setTimeout(() => {
-                const store = find(stores, {id: id});
-                resolve(store);
+                getStore(id).then((result) => {
+                    if (result) {
+                        var resultObject = result;
+                        resultObject.id = id;
+                        var redInvoiceID = result.redInvoice;
+                        if (redInvoiceID) {
+                            getRedInvoice(redInvoiceID).then((result) => {
+                                resultObject.redInvoice = result;
+                                resultObject.redInvoiceId= redInvoiceID;
+                                resolve(resultObject);
+                            })
+                        }
+                    }
+                });
+               
             }, 0)
         });
-    },
-    getRedInvoice(id) {
-      return new Promise((resolve) => {
-          setTimeout(() => {
-              const redInvoice = find(redInvoices, {id: id});
-              resolve(redInvoice);
-          }, 0)
-      });
     }
 }

@@ -1,12 +1,10 @@
 import { db } from "./firebase";
 
-export const doCreateUser = (id, infoUser) =>
-  db.ref("users/" + id).update(infoUser);
-
-export const updateProfileFB = (id, infoUser) => {
+export const updateData = (id, dataUpdate) => {
   return new Promise((resolve, reject) => {
     try {
-      db.ref("users/" + id).update(infoUser);
+      db.ref("stores/" + id).update(dataUpdate.store);
+      db.ref("stores/" + id).update(dataUpdate.redInvoice);
       resolve("success");
     } catch (ex) {
       reject("error");
@@ -14,9 +12,9 @@ export const updateProfileFB = (id, infoUser) => {
   });
 };
 
-export const getInfoUser = ( id ) => {
+export const getStore = ( id ) => {
   return new Promise((resolve, reject) => {
-    db.ref("users/" + id).once("value").then(function(snapshot) {
+    db.ref("stores/" + id).once("value").then(function(snapshot) {
       if (snapshot.val()) {
         resolve(snapshot.val());
       } else {
@@ -26,27 +24,14 @@ export const getInfoUser = ( id ) => {
   });
 };
 
-export const onceGetUsers = () =>
-  db.ref("users/").once("value");
-
-export const addDataSales = (item, navigation) => {
-  if (item.segment === 1) {
-    db.ref("sales/").push(item).then((data) => {
-      if (data.key) {
-        Alert.alert("Thông Báo","Đăng Thành Công !");
-        navigation.navigate("Home");
+export const getRedInvoice = ( id ) => {
+  return new Promise((resolve, reject) => {
+    db.ref("redInvoice/" + id).once("value").then(function(snapshot) {
+      if (snapshot.val()) {
+        resolve(snapshot.val());
       } else {
-        Alert.alert("Đăng Không Thành Công !");
+        reject("Error");
       }
     });
-  } else if (item.segment === 2) {
-    db.ref("rents/").push(item).then((data) => {
-      if (data.key) {
-        Alert.alert("Thông Báo","Đăng Thành Công !");
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Đăng Không Thành Công !");
-      }
-    });
-  }
+  });
 };

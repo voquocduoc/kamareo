@@ -1,4 +1,3 @@
-import {connect} from "react-redux";
 import React, {Component} from "react";
 import * as _ from 'lodash';
 import {Route, BrowserRouter as Router} from 'react-router-dom';
