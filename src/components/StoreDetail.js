@@ -1,12 +1,11 @@
 import React, {Component} from 'react';
-import { Card, CardImg, CardText, CardBody, CardLink,
-  CardTitle, CardSubtitle, Table, Container, Row, Col, Button, Modal,
-  ModalHeader, ModalBody, ModalFooter, Input, Label, Form,
-  FormGroup, Spinner, FormText } from 'reactstrap';
-import {connect} from "react-redux";
+import { Card,
+  CardTitle, CardBody, Table, Container, Row, Col, Button,
+  FormGroup, Spinner } from 'reactstrap';
 import StoreHOC from "./StoreHOC";
-import {selectStoreIdToView} from "../actionCreators";
+import { selectStoreIdToView } from "../actionCreators";
 import Dialog from 'material-ui/Dialog';
+import {uploadImage} from "../firebase/storage";
 
 // form - meterial-ui
 import { Field, reduxForm } from 'redux-form'
@@ -30,7 +29,7 @@ const renderTextField = ({ input, label, defaultValue, type, meta: { touched, er
     <label>{label}</label>
     <div>
       <input {...input} value={defaultValue} placeholder={label} type={type} />
-      {touched && error && <span>{error}</span>}
+      {touched && error && <span className="error">{error}</span>}      
     </div>
   </div>
 )
@@ -43,7 +42,15 @@ class StoreDetail extends Component {
     constructor(props) {
         super(props)
         this.state = {
-          modal: false
+          image: null,
+          modal: false,
+          storeId: null,
+          storeName: null,
+          storeAddress: null,
+          storePhone: null,
+          redInvoiceName: null,
+          redInvoiceAddress: null,
+          redInvoicetax: null
         };
 
         this.toggle = this.toggle.bind(this);
@@ -56,19 +63,47 @@ class StoreDetail extends Component {
       });
     }
 
+
+    componentWillUpdate(nextProps, nextState) {
+      if (nextProps.selectedStore && Object.keys(nextProps.selectedStore).length && nextProps.selectedStore.id !== this.state.storeId ) {
+        this.setState({
+          storeId: nextProps.selectedStore.id,
+          storeName: nextProps.selectedStore.name,
+          storeAddress: nextProps.selectedStore.address,
+          storePhone: nextProps.selectedStore.phone,
+          redInvoiceName: nextProps.selectedStore.redInvoice.name,
+          redInvoiceAddress: nextProps.selectedStore.redInvoice.address,
+          redInvoicetax: nextProps.selectedStore.redInvoice.taxCode,
+          image: nextProps.selectedStore.logoUrl
+        });
+      }
+    }
+  
     componentWillMount() {
         const storeId = this.props.match.params.id;
         this.props.dispatch(selectStoreIdToView(storeId));
     }
 
-    onFileLoad = (event) => {
-      const file = event.target.files[0];
-      console.log(file, event.target.files);
+    OnchangeImage = e => {
+      const files = Array.from(e.target.files)
+      let reader = new FileReader()
+      reader.readAsDataURL(files[0]);
+      reader.onload = () => {
+        this.setState({
+          image: reader.result
+        })
+        uploadImage(reader.result).then((resultImage) => {
+          this.setState({
+            image: resultImage
+          })
+        });
+      };
+      
     }
 
     render() {
         var data = this.props.selectedStore && Object.keys(this.props.selectedStore).length ? this.props.selectedStore : null;
-        const { handleSubmit, pristine, reset, submitting } = this.props;
+        const { handleSubmit } = this.props;
         if (data) {
           const redInvoice = data.redInvoice ? data.redInvoice : null;
           return (
@@ -158,7 +193,8 @@ class StoreDetail extends Component {
                       >
                         <Row>
                           <Col xs="4">
-                            <img width="100%" src={data.logoUrl} alt="Card image cap" />
+                            <img width="100%" src={this.state.image} alt="Card image cap" />
+                            <input type='file' id='single' onChange={this.OnchangeImage.bind(this)} /> 
                           </Col>
 
                           <Col xs="8">
@@ -173,7 +209,11 @@ class StoreDetail extends Component {
                                         name="name"
                                         component={renderTextField}
                                         label="Store Name"
-                                        defaultValue={data.name}
+                                        defaultValue={this.state.storeName}
+                                        value={this.state.storeName}
+                                        onChange={(event) => this.setState({
+                                          storeName: event.target.value
+                                        })}
                                       />
                                     </FormGroup>
                                   </Col>
@@ -185,7 +225,10 @@ class StoreDetail extends Component {
                                         name="address"
                                         component={renderTextField}
                                         label="Address"
-                                        defaultValue={data.address}
+                                        defaultValue={this.state.storeAddress}
+                                        onChange={(event) => this.setState({
+                                          storeAddress: event.target.value
+                                        })}
                                       />
                                     </FormGroup>
                                   </Col>
@@ -197,7 +240,10 @@ class StoreDetail extends Component {
                                         name="phone"
                                         component={renderTextField}
                                         label="Phone Number"
-                                        defaultValue={data.phone}
+                                        defaultValue={this.state.storePhone}
+                                        onChange={(event) => this.setState({
+                                          storePhone: event.target.value
+                                        })}
                                       />
                                     </FormGroup>
                                   </Col>
@@ -212,7 +258,10 @@ class StoreDetail extends Component {
                                         name="invoicename"
                                         component={renderTextField}
                                         label="Red Invoice Name"
-                                        defaultValue={data.name}
+                                        defaultValue={this.state.redInvoiceName}
+                                        onChange={(event) => this.setState({
+                                          redInvoiceName: event.target.value
+                                        })}
                                       />
                                     </FormGroup>
                                   </Col>
@@ -224,7 +273,10 @@ class StoreDetail extends Component {
                                         name="redinvoiceaddress"
                                         component={renderTextField}
                                         label="Red Invoice Address"
-                                        defaultValue={data.address}
+                                        defaultValue={this.state.redInvoiceAddress}
+                                        onChange={(event) => this.setState({
+                                          redInvoiceAddress: event.target.value
+                                        })}
                                       />
                                     </FormGroup>
                                   </Col>
@@ -236,7 +288,10 @@ class StoreDetail extends Component {
                                         name="mst"
                                         component={renderTextField}
                                         label="MST"
-                                        defaultValue={data.phone}
+                                        defaultValue={this.state.redInvoicetax}
+                                        onChange={(event) => this.setState({
+                                          redInvoicetax: event.target.value
+                                        })}
                                       />
                                     </FormGroup>
                                   </Col>
@@ -255,8 +310,8 @@ class StoreDetail extends Component {
                       </Dialog>
                     </Card>
                 </Col>
-                <Col xs="6" sm="4">.col-6 .col-sm-4</Col>
-                <Col sm="4">.col-sm-4</Col>
+                <Col xs="6" sm="4"></Col>
+                <Col sm="4"></Col>
               </Row>
             </Container>
           );
