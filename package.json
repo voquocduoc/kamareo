@@ -14,7 +14,7 @@
   "author": "Duoc Vo",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.21.1",
     "firebase": "^5.8.6",
     "history": "^4.7.2",
     "lodash": "^4.17.4",
